@@ -15,7 +15,7 @@ namespace TranslateToSpeech
     {
         public static void InsertMessage(string queueName, string message)
         {
-            string connectionString = "DefaultEndpointsProtocol=https;AccountName=cmpe363finaltemp;AccountKey=DK97Jdg7cicqgz0kmvPykYuOfVJhOYYPcAM0by8PP4Ss7Kfh0Sok5Ao6Tq+j4j4py5UOmViY/GDUpSm3JDSW+g==;EndpointSuffix=core.windows.net";
+            string connectionString = "DefaultEndpointsProtocol=https;AccountName=storagehmla;AccountKey=CI+qdaSYWKUH5ptJ3szE9ndTGiqTJKiTZqppLZ/4LGDfwjhA6mG1NywgIR2iKJ/OBJZ2Fbjj0rfkxzAaEEMUCg==;EndpointSuffix=core.windows.net";
             QueueClient queueClient = new QueueClient(connectionString, queueName);
             queueClient.CreateIfNotExists();
 
