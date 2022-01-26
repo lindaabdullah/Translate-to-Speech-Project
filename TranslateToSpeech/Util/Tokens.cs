@@ -11,7 +11,7 @@ namespace TranslateToSpeech
 		public static readonly string TranslateRegion = Environment.GetEnvironmentVariable("TRANSLATE_REGION");
 		public static readonly string TranslateEndpoint = "https://api.cognitive.microsofttranslator.com";
 
-		public static readonly string SpeechKey = Environment.GetEnvironmentVariable("SPEECH_KEY");
+		public static readonly string SpeechKey = Environment.GetEnvironmentVariable("SPEECH_KEY").ToString();
 		public static readonly string SpeechRegion = Environment.GetEnvironmentVariable("SPEECH_REGION");
 		public static readonly string SpeechEndpoint = $"https://{SpeechRegion}.tts.speech.microsoft.com";
 	}
