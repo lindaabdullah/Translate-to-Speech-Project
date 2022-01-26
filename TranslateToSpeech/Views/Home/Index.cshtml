@@ -1,0 +1,118 @@
+﻿@using Newtonsoft.Json.Linq
+
+@{
+    ViewBag.Title = "Translate To Speech";
+    var TranslateLanguages = ViewBag.tl;
+    var SpeechLanguages = ViewBag.sl;
+}
+
+@section head {
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        #form {
+            display: flex;
+            flex-direction: column;
+            width: fit-content;
+        }
+        #form * {
+            padding: 8px;
+            margin: 8px;
+        }
+        #texts {
+            display: flex;
+        }
+        #texts * {
+            width: 50%;
+            height: 5rem;
+        }
+		div {
+			padding: 0 !important;
+			margin: 0 !important;
+		}
+    </style>
+}
+
+<div id="form">
+    <div id="texts">
+        <textarea type="text" name="text" id="text"></textarea>
+        <textarea type="text" id="translation" disabled></textarea>
+    </div>
+    <select id="tlanguage" name="language" required>
+        @foreach (var language in TranslateLanguages)
+        {
+            <option value="@language.Path.Replace("translation.", "")">
+                @language.First["name"].ToString()
+            </option>
+         }
+    </select>
+    <input id="translate" type="submit" value="Translate">
+    <select id="slanguage" name="language" required>
+        @foreach (var language in SpeechLanguages)
+        {
+            <option value="@language["namecode"].ToString()">
+                @language["language"].ToString() / @language["name"].ToString() (@language["gender"].ToString())
+            </option>
+        }
+    </select>
+    <input id="speech" type="submit" value="Speech">
+</div>
+
+@section script {
+    <script>
+        const translate = document.getElementById("translate");
+		const tlanguage = document.getElementById("tlanguage");
+		const text = document.getElementById("text");
+		const translation = document.getElementById("translation");
+        const speech = document.getElementById("speech");
+        const slanguage = document.getElementById("slanguage");
+
+        translate.addEventListener("click", (event) => {
+            const body = {
+                text: text.value,
+                language: tlanguage.value
+            };
+
+            fetch("/Home/TranslateToLanguage", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify(body)
+            })
+            .then(res => res.text())
+            .then(text => {
+                translation.value = text;
+            })
+            .catch(err => {
+				translation.value = err;
+            });
+        });
+
+		speech.addEventListener("click", (event) => {
+			const body = {
+                text: translation.value,
+                language: slanguage.value
+			};
+
+            fetch("/Home/TranslationToSpeech", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify(body)
+            })
+            .then(res => res.arrayBuffer())
+            .then(buffer => {
+                const audioCtx = new AudioContext();
+                const source = audioCtx.createBufferSource();
+                audioCtx.decodeAudioData(buffer, (decodedData) => {
+                    source.buffer = decodedData;
+                    source.connect(audioCtx.destination);
+                });
+                source.start(0);
+            });
+        });
+    </script>
+}
