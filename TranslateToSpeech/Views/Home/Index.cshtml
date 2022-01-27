@@ -10,109 +10,161 @@
     <style>
         * {
             box-sizing: border-box;
+            font-family: Arial;
+            font-size: 1rem;
+        }
+        body {
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         #form {
             display: flex;
             flex-direction: column;
             width: fit-content;
+            border: 1px solid black;
+            padding: 0px !important;
         }
         #form * {
             padding: 8px;
             margin: 8px;
         }
+        #form > * {
+            padding: 16px !important;
+        }
         #texts {
             display: flex;
         }
-        #texts * {
+        #texts div {
+            display: flex;
+            flex-direction: column;
             width: 50%;
-            height: 5rem;
+            height: auto;
         }
-		div {
-			padding: 0 !important;
-			margin: 0 !important;
-		}
+        textarea {
+            max-width: 100%;
+        }
+        label {
+            padding: 0 !important;
+            margin: 0 !important;
+            margin-left: 8px !important;
+        }
+        #translateinputs, #speechinputs {
+            display: flex;
+            flex-direction: column;
+            border-top: 2px solid black;
+            padding-top: 20px !important;
+        }
+        div {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
     </style>
 }
 
 <div id="form">
     <div id="texts">
-        <textarea type="text" name="text" id="text"></textarea>
-        <textarea type="text" id="translation" disabled></textarea>
+        <div>
+            <label for="text">Text</label>
+            <textarea type="text" name="text" id="text"></textarea>
+        </div>
+
+        <div>
+            <label for="translation">Translation</label>
+            <textarea type="text" id="translation" disabled></textarea>
+        </div>
     </div>
-    <select id="tlanguage" name="language" required>
-        @foreach (var language in TranslateLanguages)
-        {
-            <option value="@language.Path.Replace("translation.", "")">
-                @language.First["name"].ToString()
-            </option>
-         }
-    </select>
-    <input id="translate" type="submit" value="Translate">
-    <select id="slanguage" name="language" required>
-        @foreach (var language in SpeechLanguages)
-        {
-            <option value="@language["namecode"].ToString()">
-                @language["language"].ToString() / @language["name"].ToString() (@language["gender"].ToString())
-            </option>
-        }
-    </select>
-    <input id="speech" type="submit" value="Speech">
+    <div id="translateinputs">
+        <label for="tlanguage">Translation Language</label>
+        <select id="tlanguage" name="language" required>
+            @foreach (var language in TranslateLanguages)
+            {
+                <option value="@language.Path.Replace("translation.", "")">
+                    @language.First["name"].ToString()
+                </option>
+            }
+        </select>
+        <input id="translate" type="submit" value="Translate">
+    </div>
+    <div id="speechinputs">
+        <label for="slanguage">Speech Language</label>
+        <select id="slanguage" name="language" required>
+            @foreach (var language in SpeechLanguages)
+            {
+                <option value="@language["namecode"].ToString()">
+                    @language["language"].ToString() / @language["name"].ToString() (@language["gender"].ToString())
+                </option>
+            }
+        </select>
+        <input id="speech" type="submit" value="Speech">
+    </div>
 </div>
+    @section script {
+        <script>
+            const translate = document.getElementById("translate");
+            const tlanguage = document.getElementById("tlanguage");
+            const text = document.getElementById("text");
+            const translation = document.getElementById("translation");
+            const speech = document.getElementById("speech");
+            const slanguage = document.getElementById("slanguage");
 
-@section script {
-    <script>
-        const translate = document.getElementById("translate");
-		const tlanguage = document.getElementById("tlanguage");
-		const text = document.getElementById("text");
-		const translation = document.getElementById("translation");
-        const speech = document.getElementById("speech");
-        const slanguage = document.getElementById("slanguage");
+            translate.addEventListener("click", (event) => {
+                const body = {
+                    text: text.value,
+                    language: tlanguage.value
+                };
 
-        translate.addEventListener("click", (event) => {
-            const body = {
-                text: text.value,
-                language: tlanguage.value
-            };
+                translation.value = "Translating...";
 
-            fetch("/Home/TranslateToLanguage", {
-                method: "POST",
-                headers: {
-                    "content-type": "application/json"
-                },
-                body: JSON.stringify(body)
-            })
-            .then(res => res.text())
-            .then(text => {
-                translation.value = text;
-            })
-            .catch(err => {
-				translation.value = err;
-            });
-        });
-
-		speech.addEventListener("click", (event) => {
-			const body = {
-                text: translation.value,
-                language: slanguage.value
-			};
-
-            fetch("/Home/TranslationToSpeech", {
-                method: "POST",
-                headers: {
-                    "content-type": "application/json"
-                },
-                body: JSON.stringify(body)
-            })
-            .then(res => res.arrayBuffer())
-            .then(buffer => {
-                const audioCtx = new AudioContext();
-                const source = audioCtx.createBufferSource();
-                audioCtx.decodeAudioData(buffer, (decodedData) => {
-                    source.buffer = decodedData;
-                    source.connect(audioCtx.destination);
+                fetch("/Home/TranslateToLanguage", {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(res => res.text())
+                .then(text => {
+                    translation.value = text;
+                })
+                .catch(err => {
+                    translation.value = err;
                 });
-                source.start(0);
             });
-        });
-    </script>
-}
+
+            speech.addEventListener("click", (event) => {
+                const body = {
+                    text: translation.value,
+                    language: slanguage.value
+                };
+
+                const temp = translation.value;
+                translation.value = "Speaking...";
+
+                fetch("/Home/TranslationToSpeech", {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then(res => res.arrayBuffer())
+                .then(buffer => {
+                    translation.value = temp;
+                    const audioCtx = new AudioContext();
+                    const source = audioCtx.createBufferSource();
+                    audioCtx.decodeAudioData(buffer, (decodedData) => {
+                        source.buffer = decodedData;
+                        source.connect(audioCtx.destination);
+                    });
+                    source.start(0);
+                })
+                .catch(err => {
+                    translation.value = err;
+                });
+            });
+        </script>
+    }

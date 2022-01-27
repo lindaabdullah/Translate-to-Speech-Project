@@ -6,8 +6,7 @@ using System.Web;
 namespace TranslateToSpeech
 {
 	public class Tokens
-	{
-		public static readonly string TranslateKey = Environment.GetEnvironmentVariable("TRANSLATE_KEY");
+	{		public static readonly string TranslateKey = Environment.GetEnvironmentVariable("TRANSLATE_KEY");
 		public static readonly string TranslateRegion = Environment.GetEnvironmentVariable("TRANSLATE_REGION");
 		public static readonly string TranslateEndpoint = "https://api.cognitive.microsofttranslator.com";
 
